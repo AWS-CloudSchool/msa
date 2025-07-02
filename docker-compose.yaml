@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  analyzer_service:
+    build: ./app/analyzer_service
+    ports:
+      - "8001:8000"
+
+  auth_service:
+    build: ./app/auth_service
+    ports:
+      - "8002:8000"
+
+  chatbot_service:
+    build: ./app/chatbot_service
+    ports:
+      - "8003:8000"
+
+  report_service:
+    build: ./app/report_service
+    ports:
+      - "8004:8000"
+
+  youtube_service:
+    build: ./app/youtube_service
+    ports:
+      - "8005:8000"
