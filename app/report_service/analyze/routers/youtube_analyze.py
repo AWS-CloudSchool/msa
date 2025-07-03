@@ -12,11 +12,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+#prefix="/analyze",
 router = APIRouter(prefix="/analyze", tags=["YouTube Reporter"])
 
 
 async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str, db: Session):
-    """백그라운드에서 YouTube 분석 실행"""
+    """백그?�운?�에??YouTube 분석 ?�행"""
     try:
         await youtube_reporter_service.process_youtube_analysis(
             job_id=job_id,
@@ -25,7 +26,7 @@ async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str, db: 
             db=db
         )
     except Exception as e:
-        logger.error(f"백그라운드 YouTube 분석 실패: {job_id} - {str(e)}")
+        logger.error(f"백그?�운??YouTube 분석 ?�패: {job_id} - {str(e)}")
 
 
 @router.post("/youtube", response_model=YouTubeReporterResponse)
@@ -36,26 +37,26 @@ async def create_youtube_analysis(
         db: Session = Depends(get_db)
 ):
     """
-    YouTube 영상 분석 및 스마트 시각화 리포트 생성
+    YouTube ?�상 분석 �??�마???�각??리포???�성
 
-    - **youtube_url**: 분석할 YouTube 영상 URL
-    - **include_audio**: 음성 요약 생성 여부 (선택사항)
-    - **options**: 추가 옵션 (선택사항)
+    - **youtube_url**: 분석??YouTube ?�상 URL
+    - **include_audio**: ?�성 ?�약 ?�성 ?��? (?�택?�항)
+    - **options**: 추�? ?�션 (?�택?�항)
     """
     try:
         user_id = current_user["user_id"]
         youtube_url = request.youtube_url
 
-        logger.info(f"🎬 YouTube Reporter 분석 요청: {youtube_url} (User: {user_id})")
+        logger.info(f"?�� YouTube Reporter 분석 ?�청: {youtube_url} (User: {user_id})")
 
-        # 1. 작업 생성
+        # 1. ?�업 ?�성
         job_id = await youtube_reporter_service.create_analysis_job(
             user_id=user_id,
             youtube_url=youtube_url,
             db=db
         )
 
-        # 2. 백그라운드에서 분석 실행
+        # 2. 백그?�운?�에??분석 ?�행
         background_tasks.add_task(
             run_youtube_analysis,
             job_id=job_id,
@@ -67,15 +68,15 @@ async def create_youtube_analysis(
         return YouTubeReporterResponse(
             job_id=job_id,
             status="processing",
-            message="🚀 YouTube Reporter 분석이 시작되었습니다. AI가 영상을 분석하고 스마트 시각화를 생성하는 중입니다...",
-            estimated_time="2-5분"
+            message="?? YouTube Reporter 분석???�작?�었?�니?? AI가 ?�상??분석?�고 ?�마???�각?��? ?�성?�는 중입?�다...",
+            estimated_time="2-5�?
         )
 
     except Exception as e:
-        logger.error(f"YouTube Reporter 분석 요청 실패: {str(e)}")
+        logger.error(f"YouTube Reporter 분석 ?�청 ?�패: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"YouTube Reporter 분석 시작 실패: {str(e)}"
+            detail=f"YouTube Reporter 분석 ?�작 ?�패: {str(e)}"
         )
 
 
@@ -86,26 +87,26 @@ async def get_analysis_status(
         db: Session = Depends(get_db)
 ):
     """
-    YouTube Reporter 분석 작업 상태 조회
+    YouTube Reporter 분석 ?�업 ?�태 조회
 
-    - **job_id**: 작업 ID
+    - **job_id**: ?�업 ID
     """
     try:
         user_id = current_user["user_id"]
 
-        # 데이터베이스에서 작업 정보 조회
+        # ?�이?�베?�스?�서 ?�업 ?�보 조회
         job = database_service.get_job_by_id(db, job_id, user_id)
         if not job:
-            raise HTTPException(status_code=404, detail="작업을 찾을 수 없습니다")
+            raise HTTPException(status_code=404, detail="?�업??찾을 ???�습?�다")
 
-        # 진행률 정보 조회
+        # 진행�??�보 조회
         progress_info = youtube_reporter_service.get_job_progress(job_id)
 
         return {
             "job_id": job_id,
             "status": job.status,
             "progress": progress_info.get("progress", 0),
-            "message": progress_info.get("message", f"상태: {job.status}"),
+            "message": progress_info.get("message", f"?�태: {job.status}"),
             "created_at": job.created_at.isoformat(),
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
             "input_data": job.input_data
@@ -114,10 +115,10 @@ async def get_analysis_status(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"작업 상태 조회 실패: {str(e)}")
+        logger.error(f"?�업 ?�태 조회 ?�패: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"작업 상태 조회 실패: {str(e)}"
+            detail=f"?�업 ?�태 조회 ?�패: {str(e)}"
         )
 
 
@@ -130,55 +131,54 @@ async def get_analysis_result(
     """
     YouTube Reporter 분석 결과 조회
 
-    - **job_id**: 작업 ID
+    - **job_id**: ?�업 ID
     """
     try:
         user_id = current_user["user_id"]
 
-        # 작업 상태 확인
+        # ?�업 ?�태 ?�인
         job = database_service.get_job_by_id(db, job_id, user_id)
         if not job:
-            raise HTTPException(status_code=404, detail="작업을 찾을 수 없습니다")
+            raise HTTPException(status_code=404, detail="?�업??찾을 ???�습?�다")
 
         if job.status == "processing":
             raise HTTPException(
                 status_code=202,
-                detail="아직 분석 중입니다. 잠시 후 다시 시도해주세요."
+                detail="?�직 분석 중입?�다. ?�시 ???�시 ?�도?�주?�요."
             )
         elif job.status == "failed":
             raise HTTPException(
                 status_code=500,
-                detail="분석이 실패했습니다."
+                detail="분석???�패?�습?�다."
             )
         elif job.status != "completed":
             raise HTTPException(
                 status_code=400,
-                detail=f"작업 상태: {job.status}"
+                detail=f"?�업 ?�태: {job.status}"
             )
 
-        # 보고서 조회
+        # 보고??조회
         reports = database_service.get_user_reports(db, user_id)
         job_report = next((r for r in reports if str(r.job_id) == job_id), None)
 
         if not job_report:
-            raise HTTPException(status_code=404, detail="분석 결과를 찾을 수 없습니다")
+            raise HTTPException(status_code=404, detail="분석 결과�?찾을 ???�습?�다")
 
-        # S3에서 리포트 내용 가져오기
-        from report_service.s3.services.user_s3_service import user_s3_service
+        # S3?�서 리포???�용 가?�오�?        from report_service.s3.services.user_s3_service import user_s3_service
         import json
 
         try:
             download_url = user_s3_service.get_presigned_url(job_report.s3_key)
             
-            # S3에서 리포트 내용 조회
+            # S3?�서 리포???�용 조회
             report_content = None
             try:
                 content = user_s3_service.get_file_content(job_report.s3_key)
                 if content and job_report.file_type == 'json':
                     report_content = json.loads(content)
-                    logger.info(f"S3에서 리포트 내용 조회: {job_id}")
+                    logger.info(f"S3?�서 리포???�용 조회: {job_id}")
             except Exception as e:
-                logger.warning(f"리포트 내용 조회 실패: {e}")
+                logger.warning(f"리포???�용 조회 ?�패: {e}")
 
             return {
                 "job_id": job_id,
@@ -188,25 +188,25 @@ async def get_analysis_result(
                 "download_url": download_url,
                 "s3_key": job_report.s3_key,
                 "file_type": job_report.file_type,
-                "content": report_content,  # S3에서 조회한 리포트 내용
-                "message": "✅ YouTube Reporter 분석이 완료되었습니다!"
+                "content": report_content,  # S3?�서 조회??리포???�용
+                "message": "??YouTube Reporter 분석???�료?�었?�니??"
             }
 
         except Exception as e:
-            logger.error(f"S3 결과 조회 실패: {e}")
+            logger.error(f"S3 결과 조회 ?�패: {e}")
             raise HTTPException(
                 status_code=500,
-                detail="분석 결과 조회 중 오류가 발생했습니다"
+                detail="분석 결과 조회 �??�류가 발생?�습?�다"
             )
 
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"분석 결과 조회 실패: {str(e)}")
+        logger.error(f"분석 결과 조회 ?�패: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"분석 결과 조회 실패: {str(e)}"
+            detail=f"분석 결과 조회 ?�패: {str(e)}"
         )
 
 
@@ -216,17 +216,16 @@ async def list_my_analyses(
         db: Session = Depends(get_db)
 ):
     """
-    내 YouTube Reporter 분석 작업 목록 조회 (로그인 선택적)
+    ??YouTube Reporter 분석 ?�업 목록 조회 (로그???�택??
     """
     try:
-        # 로그인하지 않은 경우 빈 목록 반환
+        # 로그?�하지 ?��? 경우 �?목록 반환
         if not current_user:
             return {"jobs": [], "total": 0}
             
         user_id = current_user["user_id"]
 
-        # YouTube Reporter 작업만 필터링
-        all_jobs = database_service.get_user_jobs(db, user_id)
+        # YouTube Reporter ?�업�??�터�?        all_jobs = database_service.get_user_jobs(db, user_id)
         youtube_jobs = [job for job in all_jobs if job.job_type == "youtube_reporter"]
 
         return {
@@ -244,10 +243,10 @@ async def list_my_analyses(
         }
 
     except Exception as e:
-        logger.error(f"작업 목록 조회 실패: {str(e)}")
+        logger.error(f"?�업 목록 조회 ?�패: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"작업 목록 조회 실패: {str(e)}"
+            detail=f"?�업 목록 조회 ?�패: {str(e)}"
         )
 
 
@@ -258,33 +257,33 @@ async def delete_analysis_job(
         db: Session = Depends(get_db)
 ):
     """
-    YouTube Reporter 분석 작업 삭제
+    YouTube Reporter 분석 ?�업 ??��
 
-    - **job_id**: 삭제할 작업 ID
+    - **job_id**: ??��???�업 ID
     """
     try:
         user_id = current_user["user_id"]
 
-        # 작업 삭제
+        # ?�업 ??��
         success = database_service.delete_job(db, job_id, user_id)
         if not success:
-            raise HTTPException(status_code=404, detail="작업을 찾을 수 없습니다")
+            raise HTTPException(status_code=404, detail="?�업??찾을 ???�습?�다")
 
-        return {"message": f"작업 {job_id}이 삭제되었습니다"}
+        return {"message": f"?�업 {job_id}????��?�었?�니??}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"작업 삭제 실패: {str(e)}")
+        logger.error(f"?�업 ??�� ?�패: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"작업 삭제 실패: {str(e)}"
+            detail=f"?�업 ??�� ?�패: {str(e)}"
         )
 
 
 @router.get("/health")
 async def health_check():
-    """YouTube Reporter 서비스 상태 확인"""
+    """YouTube Reporter ?�비???�태 ?�인"""
     try:
         return {
             "service": "YouTube Reporter",
@@ -301,8 +300,8 @@ async def health_check():
             ]
         }
     except Exception as e:
-        logger.error(f"헬스체크 실패: {str(e)}")
+        logger.error(f"?�스체크 ?�패: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"서비스 상태 확인 실패: {str(e)}"
+            detail=f"?�비???�태 ?�인 ?�패: {str(e)}"
         )
