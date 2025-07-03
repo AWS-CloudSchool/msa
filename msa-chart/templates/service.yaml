@@ -1,4 +1,7 @@
 {{- range .Values.services }}
+{{- if not .name }}
+{{- fail "? Error: One of the services is missing a 'name' field in values.yaml" }}
+{{- end }}
 apiVersion: v1
 kind: Service
 metadata:
