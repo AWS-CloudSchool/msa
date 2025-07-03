@@ -28,10 +28,10 @@ before_script:
 build:
   stage: build
   script:
-    - docker build -t $ECR_REGISTRY/auth_service:$TAG ./services/auth-service
-    - docker build -t $ECR_REGISTRY/report_service:$TAG ./services/report-service
-    - docker build -t $ECR_REGISTRY/chatbot_service:$TAG ./services/chatbot-service
-    - docker build -t $ECR_REGISTRY/youtube_service:$TAG ./services/youtube-service
+    - docker build -t $ECR_REGISTRY/auth_service:$TAG ./app/auth_service
+    - docker build -t $ECR_REGISTRY/report_service:$TAG ./app/report_service
+    - docker build -t $ECR_REGISTRY/chatbot_service:$TAG ./app/chatbot_service
+    - docker build -t $ECR_REGISTRY/youtube_service:$TAG ./app/youtube_service
 
 push:
   stage: push
