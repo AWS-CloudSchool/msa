@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  auth_service:
+    build: ./app/auth_service
+    ports:
+      - "8002:8000"
+
+  chatbot_service:
+    build: ./app/chatbot_service
+    ports:
+      - "8003:8000"
+
+  report_service:
+    build: ./app/report_service
+    ports:
+      - "8004:8000"
+    env_file:
+      - .env  
+
+  youtube_service:
+    build: ./app/youtube_service
+    ports:
+      - "8005:8000"
