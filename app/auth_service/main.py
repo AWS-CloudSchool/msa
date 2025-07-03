@@ -24,6 +24,6 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix="/auth")
 
-for route in app.routes:
-    print(f"? {route.path}")
-
+# main.py ¸Ç ¾Æ·¡
+for r in app.routes:
+    print("ROUTE:", r.path, r.methods)
