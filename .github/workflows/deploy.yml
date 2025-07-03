@@ -10,7 +10,7 @@ env:
   ECR_REGISTRY: 922805825674.dkr.ecr.us-east-1.amazonaws.com
   CLUSTER_NAME: tissue-cluster
   NAMESPACE: test
-  RELEASE_NAME: msa-services
+  RELEASE_NAME: msa
   CHART_PATH: msa-chart
   TAG: latest
 
