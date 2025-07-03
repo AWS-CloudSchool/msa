@@ -4,7 +4,6 @@ from auth_service.auth.routers.auth import router as auth_router
 
 app = FastAPI()
 
-app.include_router(auth_router, prefix="/auth")
 
 @app.get("/")
 def root():
@@ -23,8 +22,8 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+app.include_router(auth_router, prefix="/auth")
+
 for route in app.routes:
     print(f"? {route.path}")
 
-
-app.include_router(auth_router, prefix="/auth")
