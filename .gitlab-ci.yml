@@ -20,6 +20,8 @@ before_script:
   - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
   - aws configure set default.region $AWS_REGION
   - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+  - apt-get install -y python3-pip
+  - pip3 install awscli
 
 build:
   stage: build
