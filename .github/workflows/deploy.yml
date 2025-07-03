@@ -62,7 +62,7 @@ jobs:
 
       - name: Deploy to EKS with Helm
         run: |
-          helm upgrade --install $RELEASE_NAME $CHART_PATH -n $NAMESPACE --create-namespace \
+          helm upgrade $RELEASE_NAME $CHART_PATH -n $NAMESPACE --create-namespace \
             --set services[0].image=$ECR_REGISTRY/auth_service:$TAG \
             --set services[1].image=$ECR_REGISTRY/report_service:$TAG \
             --set services[2].image=$ECR_REGISTRY/chatbot_service:$TAG \
