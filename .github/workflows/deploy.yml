@@ -60,10 +60,3 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
-      - name: Deploy to EKS with Helm
-        run: |
-          helm upgrade $RELEASE_NAME $CHART_PATH -n $NAMESPACE --create-namespace \
-            --set services[0].image=$ECR_REGISTRY/auth_service:$TAG \
-            --set services[1].image=$ECR_REGISTRY/report_service:$TAG \
-            --set services[2].image=$ECR_REGISTRY/chatbot_service:$TAG \
-            --set services[3].image=$ECR_REGISTRY/youtube_service:$TAG
