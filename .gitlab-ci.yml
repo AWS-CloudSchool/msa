@@ -1,17 +1,10 @@
-image: docker:20.10.16-dind
+image: docker:20.10.16
 
 services:
   - docker:dind
-  
-variables:
-  DOCKER_TLS_CERTDIR: "" 
-  
-stages:
-  - build
-  - push
-  - deploy
 
 variables:
+  DOCKER_TLS_CERTDIR: "" 
   AWS_REGION: us-east-1
   ECR_REGISTRY: 922805825674.dkr.ecr.us-east-1.amazonaws.com
   CLUSTER_NAME: tissue-cluster
@@ -20,16 +13,20 @@ variables:
   CHART_PATH: msa-chart
   TAG: latest
 
+stages:
+  - build
+  - push
+  - deploy
+
 before_script:
-  - apt-get update && apt-get install -y curl docker.io
+  # Alpine 기반이므로 apt-get 대신 apk 사용
+  - apk add --no-cache bash curl python3 py3-pip
+  - pip3 install --upgrade pip awscli
   - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-  - pip3 install awscli
-  - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-  - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-  - aws configure set default.region $AWS_REGION
-  - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-  - apt-get install -y python3-pip
-  - pip3 install awscli
+  - aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+  - aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+  - aws configure set default.region "$AWS_REGION"
+  - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
 build:
   stage: build
@@ -50,10 +47,9 @@ push:
 deploy:
   stage: deploy
   script:
-    - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-    - helm upgrade --install $RELEASE_NAME $CHART_PATH -n $NAMESPACE --create-namespace \
+    - aws eks update-kubeconfig --region "$AWS_REGION" --name "$CLUSTER_NAME"
+    - helm upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace \
         --set services[0].image=$ECR_REGISTRY/auth_service:$TAG \
         --set services[1].image=$ECR_REGISTRY/report_service:$TAG \
         --set services[2].image=$ECR_REGISTRY/chatbot_service:$TAG \
         --set services[3].image=$ECR_REGISTRY/youtube_service:$TAG
-
