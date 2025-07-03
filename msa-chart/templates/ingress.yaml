@@ -16,7 +16,7 @@ spec:
       http:
         paths:
           {{- range .Values.services }}
-          - path: {{ .path }}(/|$)(.*)
+          - path: {{ .path }}
             pathType: Prefix
             backend:
               service:
