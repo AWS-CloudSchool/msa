@@ -1,9 +1,9 @@
 # app/agents/caption_agent.py
 import requests
 from langchain_core.runnables import Runnable
-from analyzer_service.core.config import settings
-from analyzer_service.analyze.services.state_manager import state_manager
-from analyzer_service.s3.services.user_s3_service import user_s3_service
+from report_service.core.config import settings
+from report_service.analyze.services.state_manager import state_manager
+from report_service.s3.services.user_s3_service import user_s3_service
 import logging
 
 logger = logging.getLogger(__name__)

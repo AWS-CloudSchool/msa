@@ -3,11 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 
-from analyzer_service.analyze.core.auth import get_current_user
-from analyzer_service.database.core.database import get_db
-from analyzer_service.analyze.services.youtube_analyze_service import youtube_reporter_service
-from analyzer_service.database.services.database_service import database_service
-from analyzer_service.analyze.models.youtube_analyze import YouTubeReporterRequest, YouTubeReporterResponse
+from report_service.analyze.core.auth import get_current_user
+from report_service.database.core.database import get_db
+from report_service.analyze.services.youtube_analyze_service import youtube_reporter_service
+from report_service.database.services.database_service import database_service
+from report_service.analyze.models.youtube_analyze import YouTubeReporterRequest, YouTubeReporterResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -164,7 +164,7 @@ async def get_analysis_result(
             raise HTTPException(status_code=404, detail="분석 결과를 찾을 수 없습니다")
 
         # S3에서 리포트 내용 가져오기
-        from analyzer_service.s3.services.user_s3_service import user_s3_service
+        from report_service.s3.services.user_s3_service import user_s3_service
         import json
 
         try:

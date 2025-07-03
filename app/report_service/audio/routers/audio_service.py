@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from analyzer_service.audio.models.audio import AudioRequest, AudioResponse
-from analyzer_service.audio.services.audio_service import audio_service
+from report_service.audio.models.audio import AudioRequest, AudioResponse
+from report_service.audio.services.audio_service import audio_service
 from datetime import datetime
 
 router = APIRouter(prefix="/audio", tags=["audio"])

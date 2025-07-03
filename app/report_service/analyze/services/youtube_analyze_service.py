@@ -5,13 +5,13 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-from analyzer_service.analyze.workflow.youtube_workflow import YouTubeReporterWorkflow
-from analyzer_service.database.services.database_service import database_service
-from analyzer_service.s3.services.user_s3_service import user_s3_service
-from analyzer_service.s3.services.s3_service import s3_service
-from analyzer_service.audio.services.audio_service import audio_service
-from analyzer_service.analyze.services.state_manager import state_manager
-from analyzer_service.analyze.services.youtube_metadata_service import youtube_metadata_service
+from report_service.analyze.workflow.youtube_workflow import YouTubeReporterWorkflow
+from report_service.database.services.database_service import database_service
+from report_service.s3.services.user_s3_service import user_s3_service
+from report_service.s3.services.s3_service import s3_service
+from report_service.audio.services.audio_service import audio_service
+from report_service.analyze.services.state_manager import state_manager
+from report_service.analyze.services.youtube_metadata_service import youtube_metadata_service
 import logging
 # 
 

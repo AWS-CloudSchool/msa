@@ -1,0 +1,28 @@
+global:
+  imagePullPolicy: IfNotPresent
+
+services:
+  - name: auth-service
+    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/auth_service:latest
+    port: 8000
+    path: /auth
+
+  - name: report-service
+    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/report_service:latest
+    port: 8000
+    path: /report
+
+  - name: chatbot-service
+    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/chatbot_service:latest
+    port: 8000
+    path: /chatbot
+
+  - name: youtube-service
+    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/youtube_service:latest
+    port: 8000
+    path: /youtube
+
+ingress:
+  enabled: true
+  host: msa.example.com    
+  className: nginx

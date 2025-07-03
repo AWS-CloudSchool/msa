@@ -1,11 +1,11 @@
 # app/agents/graph_workflow.py
 from typing import TypedDict, Dict, Any, List
 from langgraph.graph import StateGraph
-from analyzer_service.analyze.agents.caption_extractor import CaptionAgent
-from analyzer_service.analyze.agents.content_summarizer import SummaryAgent
-from analyzer_service.analyze.agents.visualization_generator import SmartVisualAgent
-from analyzer_service.analyze.agents.report_builder import ReportAgent
-from analyzer_service.analyze.services.state_manager import state_manager
+from report_service.analyze.agents.caption_extractor import CaptionAgent
+from report_service.analyze.agents.content_summarizer import SummaryAgent
+from report_service.analyze.agents.visualization_generator import SmartVisualAgent
+from report_service.analyze.agents.report_builder import ReportAgent
+from report_service.analyze.services.state_manager import state_manager
 import logging
 
 logger = logging.getLogger(__name__)

@@ -6,8 +6,8 @@ from typing import Dict, List, Any, Optional
 from langchain_aws import ChatBedrock
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
-from analyzer_service.core.config import settings
-from analyzer_service.analyze.services.state_manager import state_manager
+from report_service.core.config import settings
+from report_service.analyze.services.state_manager import state_manager
 import logging
 
 logger = logging.getLogger(__name__)

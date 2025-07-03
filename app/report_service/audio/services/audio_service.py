@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from analyzer_service.core.config import settings
-from analyzer_service.s3.services.s3_service import s3_service
+from report_service.core.config import settings
+from report_service.s3.services.s3_service import s3_service
 
 class AudioService:
     def __init__(self):
