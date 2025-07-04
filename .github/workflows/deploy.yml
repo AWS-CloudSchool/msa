@@ -3,11 +3,11 @@ name: CI/CD to EKS via ECR
 on:
   push:
     branches:
-      - v1
+      - v3
 
 env:
-  AWS_REGION: us-east-1
-  ECR_REGISTRY: 922805825674.dkr.ecr.us-east-1.amazonaws.com
+  AWS_REGION: us-west-2
+  ECR_REGISTRY: 922805825674.dkr.ecr.us-west-2.amazonaws.com
   CLUSTER_NAME: tissue-cluster
   NAMESPACE: test
   RELEASE_NAME: msa
