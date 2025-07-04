@@ -3,7 +3,7 @@ name: CI/CD to EKS via ECR
 on:
   push:
     branches:
-      - v1
+      - v2
 
 env:
   AWS_REGION: us-west-2
