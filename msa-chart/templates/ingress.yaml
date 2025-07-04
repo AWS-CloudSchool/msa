@@ -36,6 +36,13 @@ spec:
                 name: youtube-service
                 port:
                   number: 80
+          - path: /search
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: youtube-service
+                port:
+                  number: 80
           - path: /chatbot
             pathType: ImplementationSpecific
             backend:
