@@ -17,7 +17,7 @@ services:
     path: /report
     env:
       - name: DATABASE_URL
-        value: "postgresql://user:password@localhost:5432/backend_final"
+        value: "postgresql+psycopg2://user:password@database-1.cy5qyee4ofa9.us-east-1.rds.amazonaws.com:5432/backend_final"
 
 
   - name: chatbot-service
