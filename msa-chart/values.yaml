@@ -15,6 +15,10 @@ services:
     image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/report_service:latest
     port: 8000
     path: /report
+    env:
+      - name: DATABASE_URL
+        value: "postgresql://user:password@localhost:5432/backend_final"
+
 
   - name: chatbot-service
     image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/chatbot_service:latest
