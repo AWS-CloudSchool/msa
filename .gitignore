@@ -60,4 +60,12 @@ logs/
 *.tmp
 *.temp.terraform/
 
-.terraform..terraform
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.zip
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.zip
