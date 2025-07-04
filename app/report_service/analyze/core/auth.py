@@ -9,7 +9,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     token = credentials.credentials
     try:
         response = requests.post(
-            "http://auth_service:8000/auth/verify-token",
+            "http://auth-service.test.svc.cluster.local/auth/verify-token",
             headers={"Authorization": f"Bearer {token}"}
         )
         if response.status_code != 200:
