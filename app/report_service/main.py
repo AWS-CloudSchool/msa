@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(analysis_router, prefix="/analysis")
+#app.include_router(analysis_router, prefix="/analysis")
 app.include_router(audio_router, prefix="/audio")
 
 app.include_router(report_router, prefix="/report")
