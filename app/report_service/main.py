@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from report_service.analyze.routers.youtube_analyze import router as analysis_router
-from report_service.audio.routers.audio_service import router as audio_router
-from report_service.s3.routers.s3 import router as report_router
+from analyze.routers.youtube_analyze import router as analysis_router
+from audio.routers.audio_service import router as audio_router
+from s3.routers.s3 import router as report_router
 #from report_service.routers.s3 import router as s3_router
 from routers.user_analysis import router as user_analysis_router
 
