@@ -10,7 +10,8 @@ def root():
 
 
 origins = [
-    "http://34.222.140.202:3000", 
+    "http://34.222.140.202:3000",
+    "*"
 ]
 
 app.add_middleware(

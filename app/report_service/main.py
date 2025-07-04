@@ -10,7 +10,7 @@ app = FastAPI()
 
 origins = [
     "http://34.222.140.202:3000",
-    "http://a6ae0e3bc2acf4b759f75260be2f98d3-1899438564.us-west-2.elb.amazonaws.com"
+    "*"
 ]
 
 app.add_middleware(
