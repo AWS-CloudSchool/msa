@@ -7,7 +7,7 @@ import datetime
 from chatbot.agents.bedrock_agent import answer_question
 from chatbot.tool.youtube_lambda import process_user_job
 
-# Pydantic model definitions
+# Pydantic ëª¨ë¸ ?•ì˜
 class QuestionRequest(BaseModel):
     question: str
 
@@ -22,6 +22,7 @@ class ChatMessage(BaseModel):
     timestamp: str
 
 router = APIRouter()
+
 chat_history: List[ChatMessage] = []
 
 @router.get("/")
@@ -32,7 +33,7 @@ class ChatResponse(BaseModel):
     answer: str
     success: bool
     error: str = None
-    source_type: str = None  # "KB" or "FALLBACK"
+    source_type: str = None  # "KB" ?ëŠ” "FALLBACK"
     documents_found: int = 0
     relevance_scores: list = []
 
@@ -40,8 +41,8 @@ class ChatResponse(BaseModel):
 async def chat(request: QuestionRequest):
     try:
         result = answer_question(request.question)
-
-        # Handle different return formats from answer_question
+        
+        # answer_question?ì„œ ???ì„¸???•ë³´ë¥?ë°˜í™˜?˜ë„ë¡??˜ì • ?„ìš”
         if isinstance(result, dict):
             answer = result.get('answer', '')
             source_type = result.get('source_type', 'UNKNOWN')
@@ -52,7 +53,7 @@ async def chat(request: QuestionRequest):
             source_type = 'UNKNOWN'
             documents_found = 0
             relevance_scores = []
-
+            
         chat_history.append(ChatMessage(
             role="user",
             content=request.question,
@@ -63,9 +64,9 @@ async def chat(request: QuestionRequest):
             content=answer,
             timestamp=datetime.datetime.now().isoformat()
         ))
-
+        
         return ChatResponse(
-            answer=answer,
+            answer=answer, 
             success=True,
             source_type=source_type,
             documents_found=documents_found,
@@ -78,6 +79,8 @@ async def chat(request: QuestionRequest):
             error=str(e)
         )
 
+
+
 @router.get("/api/chat-history")
 async def get_chat_history():
     return chat_history
@@ -87,20 +90,22 @@ async def clear_chat_history():
     chat_history.clear()
     return {"message": "Chat history cleared."}
 
+
+
 class SyncKBRequest(BaseModel):
     user_id: str
     job_id: str
 
 @router.post("/api/sync-kb")
 async def sync_kb_endpoint(request: SyncKBRequest):
-    print("/api/sync-kb endpoint called")
-    print(f"Received request data: {request}")
+    print(f"?”¥ /api/sync-kb ?”ë“œ?¬ì¸???¸ì¶œ??")
+    print(f"?“¥ ?”ì²­ ?°ì´?? {request}")
     try:
-        print(f"Starting KB sync: user_id={request.user_id}, job_id={request.job_id}")
+        print(f"?“¥ KB ?™ê¸°???”ì²­: user_id={request.user_id}, job_id={request.job_id}")
         sync_job_id = process_user_job(request.user_id, request.job_id)
         return {
             "success": True,
-            "message": "KB sync has been started.",
+            "message": "KB ?™ê¸°?”ê? ?œì‘?˜ì—ˆ?µë‹ˆ??",
             "sync_job_id": sync_job_id,
             "kb_id": sync_job_id,
             "status": "CREATING",
@@ -108,10 +113,10 @@ async def sync_kb_endpoint(request: SyncKBRequest):
             "job_id": request.job_id
         }
     except Exception as e:
-        print(f"KB sync failed: {str(e)}")
-        print(f"Exception type: {type(e).__name__}: {e}")
+        print(f"??KB ?™ê¸°???¤íŒ¨: {str(e)}")
+        print(f"???ëŸ¬ ?ì„¸: {type(e).__name__}: {e}")
         import traceback
-        print(f"Traceback: {traceback.format_exc()}")
+        print(f"???¤íƒ ?¸ë ˆ?´ìŠ¤: {traceback.format_exc()}")
         return {
             "success": False,
             "error": str(e)
@@ -122,8 +127,8 @@ async def get_kb_status(job_id: str):
     try:
         from chatbot_service.chatbot.tool.wait_until_kb_sync_complete import get_ingestion_job_status
         status = get_ingestion_job_status(job_id)
-
-        # Map backend status to frontend status
+        
+        # Bedrock ?íƒœë¥??„ë¡ ?¸ì—”???íƒœë¡?ë§¤í•‘
         if status == "COMPLETE":
             frontend_status = "READY"
         elif status in ["STARTING", "IN_PROGRESS"]:
@@ -132,14 +137,14 @@ async def get_kb_status(job_id: str):
             frontend_status = "ERROR"
         else:
             frontend_status = "CREATING"
-
+            
         return {
             "status": frontend_status,
             "bedrock_status": status
         }
     except Exception as e:
-        print(f"Failed to retrieve KB status: {str(e)}")
+        print(f"??KB ?íƒœ ì¡°íšŒ ?¤íŒ¨: {str(e)}")
         return {
             "status": "ERROR",
             "error": str(e)
-        }
+        } 

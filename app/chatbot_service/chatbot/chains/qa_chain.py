@@ -5,9 +5,8 @@ import boto3
 import sys
 import os
 
-# 상위 디렉토리의 app.core.config를 사용하기 위한 경로 설정
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from chatbot_service.core.config import settings
+from core.config import settings
 
 def build_qa_chain():
     """QA 체인 빌드"""

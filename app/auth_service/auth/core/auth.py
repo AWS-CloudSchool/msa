@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from auth_service.auth.services.cognito_service import verify_access_token
+from auth.services.cognito_service import verify_access_token
 from typing import Dict
 
 security = HTTPBearer()

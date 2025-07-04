@@ -3,21 +3,19 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 
-from report_service.analyze.core.auth import get_current_user
-from report_service.database.core.database import get_db
-from report_service.analyze.services.youtube_analyze_service import youtube_reporter_service
-from report_service.database.services.database_service import database_service
-from report_service.analyze.models.youtube_analyze import YouTubeReporterRequest, YouTubeReporterResponse
+from analyze.core.auth import get_current_user
+from database.core.database import get_db
+from analyze.services.youtube_analyze_service import youtube_reporter_service
+from database.services.database_service import database_service
+from analyze.models.youtube_analyze import YouTubeReporterRequest, YouTubeReporterResponse
 import logging
 
 logger = logging.getLogger(__name__)
 
-#prefix="/analyze",
 router = APIRouter(prefix="/analyze", tags=["YouTube Reporter"])
 
 
 async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str, db: Session):
-    """ë°±ê·¸?¼ìš´?œì—??YouTube ë¶„ì„ ?¤í–‰"""
     try:
         await youtube_reporter_service.process_youtube_analysis(
             job_id=job_id,
@@ -26,7 +24,7 @@ async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str, db: 
             db=db
         )
     except Exception as e:
-        logger.error(f"ë°±ê·¸?¼ìš´??YouTube ë¶„ì„ ?¤íŒ¨: {job_id} - {str(e)}")
+        logger.error(f"Background YouTube analysis failed: {job_id} - {str(e)}")
 
 
 @router.post("/youtube", response_model=YouTubeReporterResponse)
@@ -37,26 +35,22 @@ async def create_youtube_analysis(
         db: Session = Depends(get_db)
 ):
     """
-    YouTube ?ìƒ ë¶„ì„ ë°??¤ë§ˆ???œê°??ë¦¬í¬???ì„±
+    Submit YouTube video for analysis and generate smart visualization report.
 
-    - **youtube_url**: ë¶„ì„??YouTube ?ìƒ URL
-    - **include_audio**: ?Œì„± ?”ì•½ ?ì„± ?¬ë? (? íƒ?¬í•­)
-    - **options**: ì¶”ê? ?µì…˜ (? íƒ?¬í•­)
+    - **youtube_url**: YouTube video URL to analyze
     """
     try:
         user_id = current_user["user_id"]
         youtube_url = request.youtube_url
 
-        logger.info(f"?¬ YouTube Reporter ë¶„ì„ ?”ì²­: {youtube_url} (User: {user_id})")
+        logger.info(f"[POST] YouTube Reporter analysis requested: {youtube_url} (User: {user_id})")
 
-        # 1. ?‘ì—… ?ì„±
         job_id = await youtube_reporter_service.create_analysis_job(
             user_id=user_id,
             youtube_url=youtube_url,
             db=db
         )
 
-        # 2. ë°±ê·¸?¼ìš´?œì—??ë¶„ì„ ?¤í–‰
         background_tasks.add_task(
             run_youtube_analysis,
             job_id=job_id,
@@ -68,15 +62,15 @@ async def create_youtube_analysis(
         return YouTubeReporterResponse(
             job_id=job_id,
             status="processing",
-            message="?? YouTube Reporter ë¶„ì„???œì‘?˜ì—ˆ?µë‹ˆ?? AIê°€ ?ìƒ??ë¶„ì„?˜ê³  ?¤ë§ˆ???œê°?”ë? ?ì„±?˜ëŠ” ì¤‘ì…?ˆë‹¤...",
-            estimated_time="2-5ë¶?
+            message="YouTube Reporter analysis has started. AI is analyzing the video and generating a report...",
+            estimated_time="2-5 minutes"
         )
 
     except Exception as e:
-        logger.error(f"YouTube Reporter ë¶„ì„ ?”ì²­ ?¤íŒ¨: {str(e)}")
+        logger.error(f"YouTube Reporter analysis request failed: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"YouTube Reporter ë¶„ì„ ?œì‘ ?¤íŒ¨: {str(e)}"
+            detail=f"YouTube Reporter analysis start failed: {str(e)}"
         )
 
 
@@ -87,26 +81,24 @@ async def get_analysis_status(
         db: Session = Depends(get_db)
 ):
     """
-    YouTube Reporter ë¶„ì„ ?‘ì—… ?íƒœ ì¡°íšŒ
+    Check status of YouTube Reporter analysis job.
 
-    - **job_id**: ?‘ì—… ID
+    - **job_id**: Job ID
     """
     try:
         user_id = current_user["user_id"]
 
-        # ?°ì´?°ë² ?´ìŠ¤?ì„œ ?‘ì—… ?•ë³´ ì¡°íšŒ
         job = database_service.get_job_by_id(db, job_id, user_id)
         if not job:
-            raise HTTPException(status_code=404, detail="?‘ì—…??ì°¾ì„ ???†ìŠµ?ˆë‹¤")
+            raise HTTPException(status_code=404, detail="Job not found.")
 
-        # ì§„í–‰ë¥??•ë³´ ì¡°íšŒ
         progress_info = youtube_reporter_service.get_job_progress(job_id)
 
         return {
             "job_id": job_id,
             "status": job.status,
             "progress": progress_info.get("progress", 0),
-            "message": progress_info.get("message", f"?íƒœ: {job.status}"),
+            "message": progress_info.get("message", f"Status: {job.status}"),
             "created_at": job.created_at.isoformat(),
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
             "input_data": job.input_data
@@ -115,11 +107,8 @@ async def get_analysis_status(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"?‘ì—… ?íƒœ ì¡°íšŒ ?¤íŒ¨: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"?‘ì—… ?íƒœ ì¡°íšŒ ?¤íŒ¨: {str(e)}"
-        )
+        logger.error(f"Failed to check job status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to check job status: {str(e)}")
 
 
 @router.get("/jobs/{job_id}/result")
@@ -129,56 +118,43 @@ async def get_analysis_result(
         db: Session = Depends(get_db)
 ):
     """
-    YouTube Reporter ë¶„ì„ ê²°ê³¼ ì¡°íšŒ
+    Retrieve YouTube Reporter analysis result.
 
-    - **job_id**: ?‘ì—… ID
+    - **job_id**: Job ID
     """
     try:
         user_id = current_user["user_id"]
 
-        # ?‘ì—… ?íƒœ ?•ì¸
         job = database_service.get_job_by_id(db, job_id, user_id)
         if not job:
-            raise HTTPException(status_code=404, detail="?‘ì—…??ì°¾ì„ ???†ìŠµ?ˆë‹¤")
+            raise HTTPException(status_code=404, detail="Job not found.")
 
         if job.status == "processing":
-            raise HTTPException(
-                status_code=202,
-                detail="?„ì§ ë¶„ì„ ì¤‘ì…?ˆë‹¤. ? ì‹œ ???¤ì‹œ ?œë„?´ì£¼?¸ìš”."
-            )
+            raise HTTPException(status_code=202, detail="Analysis is not yet complete. Please try again later.")
         elif job.status == "failed":
-            raise HTTPException(
-                status_code=500,
-                detail="ë¶„ì„???¤íŒ¨?ˆìŠµ?ˆë‹¤."
-            )
+            raise HTTPException(status_code=500, detail="Analysis failed.")
         elif job.status != "completed":
-            raise HTTPException(
-                status_code=400,
-                detail=f"?‘ì—… ?íƒœ: {job.status}"
-            )
+            raise HTTPException(status_code=400, detail=f"Job status: {job.status}")
 
-        # ë³´ê³ ??ì¡°íšŒ
         reports = database_service.get_user_reports(db, user_id)
         job_report = next((r for r in reports if str(r.job_id) == job_id), None)
 
         if not job_report:
-            raise HTTPException(status_code=404, detail="ë¶„ì„ ê²°ê³¼ë¥?ì°¾ì„ ???†ìŠµ?ˆë‹¤")
+            raise HTTPException(status_code=404, detail="Report not found.")
 
-        # S3?ì„œ ë¦¬í¬???´ìš© ê°€?¸ì˜¤ê¸?        from report_service.s3.services.user_s3_service import user_s3_service
+        from report_service.s3.services.user_s3_service import user_s3_service
         import json
 
         try:
             download_url = user_s3_service.get_presigned_url(job_report.s3_key)
-            
-            # S3?ì„œ ë¦¬í¬???´ìš© ì¡°íšŒ
             report_content = None
             try:
                 content = user_s3_service.get_file_content(job_report.s3_key)
                 if content and job_report.file_type == 'json':
                     report_content = json.loads(content)
-                    logger.info(f"S3?ì„œ ë¦¬í¬???´ìš© ì¡°íšŒ: {job_id}")
+                    logger.info(f"Loaded report from S3: {job_id}")
             except Exception as e:
-                logger.warning(f"ë¦¬í¬???´ìš© ì¡°íšŒ ?¤íŒ¨: {e}")
+                logger.warning(f"Failed to load report content: {e}")
 
             return {
                 "job_id": job_id,
@@ -188,26 +164,19 @@ async def get_analysis_result(
                 "download_url": download_url,
                 "s3_key": job_report.s3_key,
                 "file_type": job_report.file_type,
-                "content": report_content,  # S3?ì„œ ì¡°íšŒ??ë¦¬í¬???´ìš©
-                "message": "??YouTube Reporter ë¶„ì„???„ë£Œ?˜ì—ˆ?µë‹ˆ??"
+                "content": report_content,
+                "message": "YouTube Reporter analysis completed."
             }
 
         except Exception as e:
-            logger.error(f"S3 ê²°ê³¼ ì¡°íšŒ ?¤íŒ¨: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail="ë¶„ì„ ê²°ê³¼ ì¡°íšŒ ì¤??¤ë¥˜ê°€ ë°œìƒ?ˆìŠµ?ˆë‹¤"
-            )
-
+            logger.error(f"Failed to load S3 result: {e}")
+            raise HTTPException(status_code=500, detail="Error occurred while loading analysis result.")
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"ë¶„ì„ ê²°ê³¼ ì¡°íšŒ ?¤íŒ¨: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"ë¶„ì„ ê²°ê³¼ ì¡°íšŒ ?¤íŒ¨: {str(e)}"
-        )
+        logger.error(f"Failed to retrieve analysis result: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve analysis result: {str(e)}")
 
 
 @router.get("/jobs")
@@ -216,16 +185,15 @@ async def list_my_analyses(
         db: Session = Depends(get_db)
 ):
     """
-    ??YouTube Reporter ë¶„ì„ ?‘ì—… ëª©ë¡ ì¡°íšŒ (ë¡œê·¸??? íƒ??
+    List of YouTube Reporter analysis jobs for the current logged-in user.
     """
     try:
-        # ë¡œê·¸?¸í•˜ì§€ ?Šì? ê²½ìš° ë¹?ëª©ë¡ ë°˜í™˜
         if not current_user:
             return {"jobs": [], "total": 0}
-            
+
         user_id = current_user["user_id"]
 
-        # YouTube Reporter ?‘ì—…ë§??„í„°ë§?        all_jobs = database_service.get_user_jobs(db, user_id)
+        all_jobs = database_service.get_user_jobs(db, user_id)
         youtube_jobs = [job for job in all_jobs if job.job_type == "youtube_reporter"]
 
         return {
@@ -243,11 +211,8 @@ async def list_my_analyses(
         }
 
     except Exception as e:
-        logger.error(f"?‘ì—… ëª©ë¡ ì¡°íšŒ ?¤íŒ¨: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"?‘ì—… ëª©ë¡ ì¡°íšŒ ?¤íŒ¨: {str(e)}"
-        )
+        logger.error(f"Failed to retrieve job list: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve job list: {str(e)}")
 
 
 @router.delete("/jobs/{job_id}")
@@ -257,33 +222,29 @@ async def delete_analysis_job(
         db: Session = Depends(get_db)
 ):
     """
-    YouTube Reporter ë¶„ì„ ?‘ì—… ?? œ
+    Delete a YouTube Reporter analysis job.
 
-    - **job_id**: ?? œ???‘ì—… ID
+    - **job_id**: Job ID to delete
     """
     try:
         user_id = current_user["user_id"]
 
-        # ?‘ì—… ?? œ
         success = database_service.delete_job(db, job_id, user_id)
         if not success:
-            raise HTTPException(status_code=404, detail="?‘ì—…??ì°¾ì„ ???†ìŠµ?ˆë‹¤")
+            raise HTTPException(status_code=404, detail="Job not found.")
 
-        return {"message": f"?‘ì—… {job_id}???? œ?˜ì—ˆ?µë‹ˆ??}
+        return {"message": f"Job {job_id} has been deleted."}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"?‘ì—… ?? œ ?¤íŒ¨: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"?‘ì—… ?? œ ?¤íŒ¨: {str(e)}"
-        )
+        logger.error(f"Failed to delete job: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete job: {str(e)}")
 
 
 @router.get("/health")
 async def health_check():
-    """YouTube Reporter ?œë¹„???íƒœ ?•ì¸"""
+    """YouTube Reporter service health check"""
     try:
         return {
             "service": "YouTube Reporter",
@@ -300,8 +261,5 @@ async def health_check():
             ]
         }
     except Exception as e:
-        logger.error(f"?¬ìŠ¤ì²´í¬ ?¤íŒ¨: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"?œë¹„???íƒœ ?•ì¸ ?¤íŒ¨: {str(e)}"
-        )
+        logger.error(f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")

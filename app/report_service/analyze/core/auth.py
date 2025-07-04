@@ -8,7 +8,6 @@ security = HTTPBearer()
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
     token = credentials.credentials
     try:
-        # ?? auth_service에 토큰 검증 요청
         response = requests.post(
             "http://auth_service:8000/verify-token",
             headers={"Authorization": f"Bearer {token}"}

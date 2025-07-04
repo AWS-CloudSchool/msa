@@ -1,8 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from chatbot_service.chatbot.routers.chat_router import router as chat_router_router
+from chatbot.routers.chat_router import router as chat_router_router
 
 app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"message": "Hello from chatbot_service!"}
 
 
 origins = [
@@ -19,6 +23,6 @@ app.add_middleware(
 
 app.include_router(chat_router_router, prefix="/chat_router")
 
-@app.get("/")
-def root():
-    return {"message": "Hello from chatbot_service!"}
+# main.py ¸Ç ¾Æ·¡
+for r in app.routes:
+    print("ROUTE:", r.path, r.methods)

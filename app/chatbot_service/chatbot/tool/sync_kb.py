@@ -1,17 +1,15 @@
-# tools/sync_kb.py
-
 import boto3
 import json
 import sys
 import os
 from botocore.exceptions import ClientError
 
-# 상위 디렉토리의 app.core.config를 사용하기 위한 경로 설정
+# Add root path to import app.core.config
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from chatbot_service.core.config import settings
+from core.config import settings
 
 def sync_kb():
-    """Bedrock Knowledge Base 동기화 Job 시작"""
+    """Start a new Bedrock Knowledge Base ingestion job."""
     try:
         bedrock_client = boto3.client("bedrock-agent", region_name=settings.AWS_REGION)
         
@@ -21,38 +19,40 @@ def sync_kb():
         )
         
         job_id = response["ingestionJob"]["ingestionJobId"]
-        print(f"📋 KB 동기화 Job 시작: {job_id}")
+        print(f"KB ingestion job started: {job_id}")
         return job_id
         
     except Exception as e:
-        print(f"❌ KB 동기화 Job 시작 실패: {e}")
+        print(f"Failed to start KB ingestion job: {e}")
         return None
 
+    # The following block is unreachable due to the return above,
+    # but retained for debugging structure if refactored later.
     print("===== Lambda sync_kb ENTRY =====")
     print("MODULE FILE:", __file__)
-    print("BEDROCK_DS_ID current:", settings.BEDROCK_DS_ID, type(settings.BEDROCK_DS_ID))
-    print("BEDROCK_KB_ID current:", settings.BEDROCK_KB_ID, type(settings.BEDROCK_KB_ID))
-    print("AWS_REGION current:", settings.AWS_REGION, type(settings.AWS_REGION))
+    print("BEDROCK_DS_ID:", settings.BEDROCK_DS_ID, type(settings.BEDROCK_DS_ID))
+    print("BEDROCK_KB_ID:", settings.BEDROCK_KB_ID, type(settings.BEDROCK_KB_ID))
+    print("AWS_REGION:", settings.AWS_REGION, type(settings.AWS_REGION))
 
-    # 환경 변수 검증
+    # Check for missing configuration
     if not settings.BEDROCK_KB_ID or not settings.BEDROCK_DS_ID:
-        print("❌ KB 동기화 실패: BEDROCK_KB_ID 또는 BEDROCK_DS_ID가 설정되지 않음")
+        print("Missing BEDROCK_KB_ID or BEDROCK_DS_ID configuration.")
         print(f"BEDROCK_KB_ID: {settings.BEDROCK_KB_ID}")
         print(f"BEDROCK_DS_ID: {settings.BEDROCK_DS_ID}")
         return None
 
-    print("✅ 환경 변수 검증 통과")
+    print("Proceeding to fallback ingestion trigger.")
     kb_client = boto3.client("bedrock-agent", region_name=settings.AWS_REGION)
-    print("✅ Bedrock Agent 클라이언트 생성 완료")
+    print("Bedrock Agent client initialized.")
 
-    # ① 진행 중인 Job 확인
+    # Try to find an already running ingestion job
     try:
-        print("🔍 기존 Job 확인 중...")
+        print("Checking existing ingestion jobs...")
         jobs = kb_client.list_ingestion_jobs(
             knowledgeBaseId=settings.BEDROCK_KB_ID,
             dataSourceId=settings.BEDROCK_DS_ID
         )
-        print(f"📋 발견된 Job 수: {len(jobs.get('ingestionJobSummaries', []))}")
+        print(f"Total existing jobs: {len(jobs.get('ingestionJobSummaries', []))}")
         
         for job in jobs.get("ingestionJobSummaries", []):
             print(f"  - Job ID: {job.get('ingestionJobId')}, Status: {job.get('status')}")
@@ -61,36 +61,37 @@ def sync_kb():
                 job.get("status") in ["STARTING", "IN_PROGRESS", "COMPLETE"]
             ):
                 job_id = job["ingestionJobId"]
-                print(f"⚠️ 진행 중인 Job이 있습니다: {job_id} → 재사용")
+                print(f"Found already running/complete ingestion job: {job_id}")
                 return str(job_id)
     except Exception as e:
-        print(f"⚠️ 기존 Job 확인 중 오류: {e}")
+        print(f"Failed to check existing ingestion jobs: {e}")
 
-    # ② 새로 요청
+    # Attempt new ingestion job as fallback
     try:
-        # AWS Bedrock Agent API의 정확한 파라미터명 사용 (camelCase)
+        # AWS Bedrock API requires camelCase parameters
         params = {
             "knowledgeBaseId": str(settings.BEDROCK_KB_ID),
             "dataSourceId": str(settings.BEDROCK_DS_ID)
         }
-        print("🚀 새로운 Ingestion Job 시작 요청...")
-        print("Calling start_ingestion_job params:", params)
-        print("파라미터 타입:", {k: type(v) for k, v in params.items()})
-        print("파라미터 값 확인:")
-        print(f"  knowledgeBaseId: '{params['knowledgeBaseId']}' (길이: {len(params['knowledgeBaseId'])})")
-        print(f"  dataSourceId: '{params['dataSourceId']}' (길이: {len(params['dataSourceId'])})")
+        print("Starting new ingestion job...")
+        print("Calling start_ingestion_job with params:", params)
+        print("Parameter types:", {k: type(v) for k, v in params.items()})
+        print("Parameter values:")
+        print(f"  knowledgeBaseId: '{params['knowledgeBaseId']}' (length: {len(params['knowledgeBaseId'])})")
+        print(f"  dataSourceId: '{params['dataSourceId']}' (length: {len(params['dataSourceId'])})")
 
         response = kb_client.start_ingestion_job(**params)
         job_id = response["ingestionJob"]["ingestionJobId"]
-        print("✅ Job Started:", job_id)
+        print("New ingestion job started:", job_id)
         return str(job_id)
 
     except ClientError as e:
-        print("❌ AWS CLIENT ERROR 발생")
-        print("💥", str(e))
-        print("🧪 RAW AWS RESPONSE:", json.dumps(e.response, indent=2, ensure_ascii=False))
+        print("AWS ClientError occurred.")
+        print("Error message:", str(e))
+        print("Raw AWS response:", json.dumps(e.response, indent=2, ensure_ascii=False))
         return None
+
     except Exception as e:
-        print("❌ 일반 EXCEPTION 발생")
-        print("💥", str(e))
+        print("General exception occurred during ingestion job.")
+        print("Error message:", str(e))
         return None

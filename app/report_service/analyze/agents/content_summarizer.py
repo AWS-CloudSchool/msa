@@ -1,18 +1,17 @@
-# app/agents/summary_agent.py
 import os
 import boto3
 from langchain_aws import ChatBedrock
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
-from report_service.core.config import settings
-from report_service.analyze.services.state_manager import state_manager
+from core.config import settings
+from analyze.services.state_manager import state_manager
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class SummaryAgent(Runnable):
-    """YouTube 영상을 포괄적으로 요약하는 에이전트 - taeho 백엔드 통합 버전"""
+    """Agent that summarizes a YouTube caption into key insights."""
 
     def __init__(self):
         self.llm = ChatBedrock(
@@ -22,23 +21,21 @@ class SummaryAgent(Runnable):
         )
 
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", """당신은 YouTube 영상 자막을 분석하여 **영상을 보지 않고도 완전히 이해할 수 있는** 포괄적인 요약을 생성하는 전문가입니다.
+            ("system", """You are an assistant that summarizes YouTube video captions into structured insights.
 
-**핵심 원칙:**
-1. **완전성**: 영상의 모든 중요한 내용을 포함하여, 독자가 영상을 보지 않아도 전체 내용을 이해할 수 있도록 합니다.
-2. **구조화**: 논리적인 흐름으로 내용을 조직화하여 읽기 쉽게 만듭니다.
-3. **맥락 제공**: 배경 정보, 전제 조건, 관련 개념을 충분히 설명합니다.
-4. **구체성**: 추상적인 설명보다는 구체적인 예시, 수치, 사실을 포함합니다.
-5. **시각화 기회**: 복잡한 개념, 프로세스, 비교, 데이터는 나중에 시각화할 수 있도록 명확히 기술합니다.
+**Summarization Criteria:**
+1. **Overall Summary**: Describe the general theme and message of the video in a concise way.
+2. **Key Points**: Extract core arguments, conclusions, or findings.
+3. **Contextual Details**: Mention context, conditions, related insights.
+4. **Actionable Takeaways**: Summarize direct implications, suggestions, or results.
+5. **Additional Information**: Add references, metrics, time markers, or other important mentions.
 
-**요약 구조:**
-1. **개요**: 영상의 주제와 목적, 핵심 메시지
-2. **주요 내용**: 핵심 개념들을 논리적 순서로 설명
-3. **세부 사항**: 중요한 팁, 주의사항, 권장사항
-4. **핵심 요점**: 가장 중요한 3-5개의 핵심 메시지
-
-최소 800자 이상의 상세한 요약을 작성하세요."""),
-            ("human", "다음 YouTube 영상 자막을 분석하여 포괄적인 요약을 작성해주세요:\n\n{caption}")
+**Expected Output:**
+- 1 paragraph summary
+- 3~5 bullet points with key findings
+- Short and clear
+- 800 words max"""),
+            ("human", "Here is the YouTube caption to summarize:\n\n{caption}")
         ])
 
     def invoke(self, state: dict, config=None):
@@ -46,68 +43,59 @@ class SummaryAgent(Runnable):
         job_id = state.get("job_id")
         user_id = state.get("user_id")
 
-        logger.info("🧠 포괄적 요약 생성 시작...")
+        logger.info("Starting summary generation...")
 
-        # 진행률 업데이트
         if job_id:
             try:
-                state_manager.update_progress(job_id, 40, "🧠 영상 내용 분석 중...")
+                state_manager.update_progress(job_id, 40, "Summarizing the YouTube caption...")
             except Exception as e:
-                logger.warning(f"진행률 업데이트 실패 (무시됨): {e}")
+                logger.warning(f"Failed to update state (ignored): {e}")
 
-        if not caption or "자막을 찾을 수 없습니다" in caption or "자막 추출 실패" in caption:
-            logger.warning("유효한 자막이 없습니다.")
-            return {**state, "summary": "자막을 분석할 수 없습니다. 영상에 자막이 없거나 추출에 실패했습니다."}
+        if not caption or "No caption detected" in caption or "Caption extraction failed" in caption:
+            logger.warning("Invalid or missing caption.")
+            return {**state, "summary": "No valid caption found. Caption may be missing or failed to extract."}
 
         try:
-            # 자막이 너무 길면 중요 부분 추출
             processed_caption = self._preprocess_caption(caption)
 
             response = self.llm.invoke(
                 self.prompt.format_messages(caption=processed_caption)
             )
-
             summary = response.content.strip()
 
-            # 요약 품질 검증
             if len(summary) < 500:
-                logger.warning("생성된 요약이 너무 짧습니다. 재시도합니다.")
+                logger.warning("Summary appears too short. Attempting enhancement...")
                 followup_prompt = ChatPromptTemplate.from_messages([
-                    ("system", "이전 요약이 너무 간단합니다. 더 상세하고 포괄적인 요약을 작성해주세요."),
-                    ("human", f"원본 자막:\n{processed_caption}\n\n이전 요약:\n{summary}\n\n더 상세한 요약을 작성해주세요.")
+                    ("system", "The initial summary was too short. Please provide a more detailed response."),
+                    ("human", f"Original caption:\n{processed_caption}\n\nInitial summary:\n{summary}\n\nPlease elaborate further.")
                 ])
                 response = self.llm.invoke(followup_prompt.format_messages())
                 summary = response.content.strip()
 
-            logger.info(f"✅ 요약 생성 완료: {len(summary)}자")
+            logger.info(f"Summary generation completed. Length: {len(summary)}")
             return {**state, "summary": summary}
 
         except Exception as e:
-            error_msg = f"요약 생성 중 오류가 발생했습니다: {str(e)}"
+            error_msg = f"Error during summary generation: {str(e)}"
             logger.error(error_msg)
             return {**state, "summary": error_msg}
 
     def _preprocess_caption(self, caption: str) -> str:
-        """자막 전처리 - 중요 부분 추출"""
+        """Trims and extracts the most important parts of the caption for summarization."""
         if len(caption) <= 6000:
             return caption
 
-        logger.info(f"자막이 너무 깁니다 ({len(caption)}자). 중요 부분을 추출합니다.")
+        logger.info(f"Caption too long ({len(caption)} chars). Extracting highlights...")
 
-        # 문장 단위로 분할
         sentences = caption.replace('\n', ' ').split('.')
 
-        # 중요도 키워드
         importance_keywords = [
-            '중요', '핵심', '주요', '필수', '결론', '요약', '정리',
-            '첫째', '둘째', '셋째', '마지막',
-            '장점', '단점', '특징', '방법', '이유', '결과',
-            '주의', '팁', '추천', '권장',
-            '데이터', '통계', '수치', '비교',
-            '정의', '개념', '원리', '이론'
+            'summary', 'key point', 'insight', 'finding', 'result', 'conclusion',
+            'first', 'second', 'third', 'main',
+            'score', 'criteria', 'impact', 'outcome', 'recommendation', 'evidence',
+            'context', 'reference', 'trend'
         ]
 
-        # 중요 문장 추출
         important_sentences = []
         regular_sentences = []
 
@@ -115,35 +103,22 @@ class SummaryAgent(Runnable):
             sentence = sentence.strip()
             if not sentence:
                 continue
-
-            # 중요도 점수 계산
-            importance_score = sum(1 for keyword in importance_keywords if keyword in sentence)
-
-            if importance_score > 0:
-                important_sentences.append((importance_score, sentence))
+            score = sum(1 for keyword in importance_keywords if keyword.lower() in sentence.lower())
+            if score > 0:
+                important_sentences.append((score, sentence))
             else:
                 regular_sentences.append(sentence)
 
-        # 중요도 순으로 정렬
         important_sentences.sort(key=lambda x: x[0], reverse=True)
 
-        # 처음, 중간, 끝 부분 포함
         result_sentences = []
-
-        # 처음 10문장
         result_sentences.extend(sentences[:10])
-
-        # 중요 문장들
         result_sentences.extend([s[1] for s in important_sentences[:30]])
 
-        # 일반 문장 중 일부
         step = max(1, len(regular_sentences) // 20)
         result_sentences.extend(regular_sentences[::step][:20])
-
-        # 마지막 10문장
         result_sentences.extend(sentences[-10:])
 
-        # 중복 제거하면서 순서 유지
         seen = set()
         final_sentences = []
         for sentence in result_sentences:
@@ -153,9 +128,8 @@ class SummaryAgent(Runnable):
 
         processed = '. '.join(final_sentences)
 
-        # 최대 길이 제한
         if len(processed) > 6000:
             processed = processed[:6000] + "..."
 
-        logger.info(f"자막 전처리 완료: {len(caption)}자 -> {len(processed)}자")
+        logger.info(f"Caption preprocessing complete: {len(caption)} -> {len(processed)} chars")
         return processed

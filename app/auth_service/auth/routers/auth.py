@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
-from auth_service.auth.models.auth import SignUpRequest, ConfirmSignUpRequest, SignInRequest, RefreshTokenRequest
-from auth_service.auth.services.cognito_service import (
+from auth.models.auth import SignUpRequest, ConfirmSignUpRequest, SignInRequest, RefreshTokenRequest
+from auth.services.cognito_service import (
     sign_up_user, confirm_user_signup, sign_in_user, 
     refresh_user_token, get_user_info, verify_access_token
 )

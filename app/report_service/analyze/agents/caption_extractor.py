@@ -1,9 +1,10 @@
 # app/agents/caption_agent.py
+
 import requests
 from langchain_core.runnables import Runnable
-from report_service.core.config import settings
-from report_service.analyze.services.state_manager import state_manager
-from report_service.s3.services.user_s3_service import user_s3_service
+from core.config import settings
+from analyze.services.state_manager import state_manager
+from s3.services.user_s3_service import user_s3_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,14 +20,13 @@ class CaptionAgent(Runnable):
         job_id = state.get("job_id")
         user_id = state.get("user_id")
 
-        logger.info(f"🎬 자막 추출 시작: {youtube_url}")
+        logger.info(f"Caption extraction started for URL: {youtube_url}")
 
-        # 진행률 업데이트
         if job_id:
             try:
-                state_manager.update_progress(job_id, 20, "📝 자막 추출 중...")
+                state_manager.update_progress(job_id, 20, "Extracting caption from YouTube...")
             except Exception as e:
-                logger.warning(f"진행률 업데이트 실패 (무시됨): {e}")
+                logger.warning(f"Failed to update progress (reason: {e})")
 
         try:
             response = requests.get(
@@ -38,21 +38,21 @@ class CaptionAgent(Runnable):
 
             caption = response.json().get("data", {}).get("content", "")
             if not caption:
-                caption = "자막을 찾을 수 없습니다."
+                caption = "Caption not found."
 
-            # 자막을 S3에 .txt 파일로 저장
-            if job_id and user_id and caption != "자막을 찾을 수 없습니다.":
+            # Upload to S3 if valid
+            if job_id and user_id and caption != "Caption not found.":
                 try:
                     s3_key = f"captions/{user_id}/{job_id}_caption.txt"
                     user_s3_service.upload_text_content(s3_key, caption)
-                    logger.info(f"📄 자막 S3 저장 완료: {s3_key}")
+                    logger.info(f"Caption uploaded to S3 at: {s3_key}")
                 except Exception as e:
-                    logger.warning(f"자막 S3 저장 실패 (무시됨): {e}")
+                    logger.warning(f"Failed to upload caption to S3 (reason: {e})")
 
-            logger.info(f"✅ 자막 추출 완료: {len(caption)}자")
+            logger.info(f"Caption extraction completed. Length: {len(caption)}")
             return {**state, "caption": caption}
 
         except Exception as e:
-            error_msg = f"자막 추출 실패: {str(e)}"
+            error_msg = f"Caption extraction failed: {str(e)}"
             logger.error(error_msg)
             return {**state, "caption": error_msg}

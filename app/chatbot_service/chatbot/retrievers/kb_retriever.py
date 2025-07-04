@@ -4,12 +4,10 @@ import sys
 import os
 from langchain_aws import ChatBedrock
 
-# 상위 디렉토리의 app.core.config를 사용하기 위한 경로 설정
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from chatbot_service.core.config import settings
+from core.config import settings
 
 def get_llm():
-    """Bedrock LLM 클라이언트 반환"""
     return ChatBedrock(
         client=boto3.client("bedrock-runtime", region_name=settings.AWS_REGION),
         model_id=settings.BEDROCK_MODEL_ID,
@@ -17,7 +15,6 @@ def get_llm():
     )
 
 def get_kb_retriever():
-    """Bedrock Knowledge Base 검색기 반환"""
     bedrock_client = boto3.client("bedrock-agent-runtime", region_name=settings.AWS_REGION)
     
     def retrieve(query: str):
@@ -34,7 +31,6 @@ def get_kb_retriever():
                 }
             )
             
-            # LangChain Document 형식으로 변환
             from langchain_core.documents import Document
             documents = []
             
@@ -52,7 +48,7 @@ def get_kb_retriever():
             return documents
             
         except Exception as e:
-            print(f"❌ KB 검색 실패: {e}")
+            print(f" KB search fail: {e}")
             return []
     
     return retrieve

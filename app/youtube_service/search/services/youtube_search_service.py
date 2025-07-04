@@ -2,7 +2,7 @@ from typing import List
 from datetime import datetime
 from fastapi import HTTPException
 from youtube_search import YoutubeSearch
-from youtube_service.search.models.youtube_search import YouTubeSearchResponse, YouTubeVideoInfo
+from search.models.youtube_search import YouTubeSearchResponse, YouTubeVideoInfo
 import re
 import logging
 
@@ -13,27 +13,27 @@ class YouTubeSearchService:
         pass
 
     async def search_videos(self, query: str, max_results: int = 10) -> YouTubeSearchResponse:
-        """YouTube 비디오 검색"""
+        """Search for YouTube videos based on a query"""
         try:
-            logger.info(f"YouTube 검색 시작: query={query}, max_results={max_results}")
+            logger.info(f"Starting YouTube search: query={query}, max_results={max_results}")
             
-            # 검색 요청
+            # Perform search
             search_results = YoutubeSearch(
                 query,
                 max_results=max_results
             ).to_dict()
 
-            logger.info(f"검색 결과 수: {len(search_results)}")
+            logger.info(f"Number of results returned: {len(search_results)}")
 
-            # 응답 생성
+            # Process response
             videos = []
             for item in search_results:
                 try:
-                    # 조회수 문자열을 숫자로 변환
+                    # Convert view count string to integer
                     views = item.get('views', '0')
                     views = int(re.sub(r'[^\d]', '', views)) if views else 0
 
-                    # 재생 시간 문자열을 초 단위로 변환
+                    # Convert duration string to seconds
                     duration = item.get('duration', '0:00')
                     duration_seconds = 0
                     
@@ -49,9 +49,9 @@ class YouTubeSearchService:
                         except ValueError:
                             duration_seconds = 0
 
-                    # YouTube Shorts 필터링 (60초 이하 제외)
+                    # Filter out YouTube Shorts (duration ≤ 60 seconds)
                     if duration_seconds > 0 and duration_seconds <= 60:
-                        logger.info(f"Shorts 영상 제외: {item['title']} ({duration_seconds}초)")
+                        logger.info(f"Skipping short video: {item['title']} ({duration_seconds} seconds)")
                         continue
 
                     video = YouTubeVideoInfo(
@@ -68,10 +68,10 @@ class YouTubeSearchService:
                     )
                     videos.append(video)
                 except Exception as e:
-                    logger.error(f"비디오 정보 변환 중 오류: {str(e)}")
+                    logger.error(f"Error while converting video info: {str(e)}")
                     continue
 
-            logger.info(f"성공적으로 변환된 비디오 수: {len(videos)}")
+            logger.info(f"Number of successfully parsed videos: {len(videos)}")
 
             return YouTubeSearchResponse(
                 query=query,
@@ -81,10 +81,10 @@ class YouTubeSearchService:
             )
 
         except Exception as e:
-            logger.error(f"YouTube 검색 실패: {str(e)}")
+            logger.error(f"YouTube search failed: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=f"YouTube 검색 실패: {str(e)}"
+                detail=f"YouTube search failed: {str(e)}"
             )
 
 youtube_search_service = YouTubeSearchService()

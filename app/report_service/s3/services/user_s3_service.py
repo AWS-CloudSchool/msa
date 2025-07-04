@@ -11,7 +11,7 @@ class UserS3Service:
     
     def upload_user_report(self, user_id: str, job_id: str, content: str, file_type: str = "json") -> str:
         """
-        보고서 업로드 (대시보드 호환 경로: reports/{user_id}/{job_id}_report.{file_type})
+        Upload user report (path: reports/{user_id}/{job_id}_report.{file_type})
         """
         try:
             key = f"reports/{user_id}/{job_id}_report.{file_type}"
@@ -28,11 +28,11 @@ class UserS3Service:
             )
             return key
         except Exception as e:
-            raise Exception(f"보고서 업로드 실패: {str(e)}")
+            raise Exception(f"Failed to upload report: {str(e)}")
     
     def upload_user_audio(self, user_id: str, job_id: str, audio_data: bytes) -> str:
         """
-        사용자별 오디오 파일 업로드
+        Upload user-specific audio file
         """
         try:
             key = f"audio/{user_id}/{job_id}_audio.mp3"
@@ -49,18 +49,14 @@ class UserS3Service:
             )
             return key
         except Exception as e:
-            raise Exception(f"오디오 업로드 실패: {str(e)}")
+            raise Exception(f"Failed to upload audio: {str(e)}")
   
-    
     def get_user_files(self, user_id: str, file_type: str = None) -> List[Dict]:
         """
-        사용자 파일 목록 조회 (reports, audio, visuals)
+        List user files (reports, audio, visuals)
         """
         try:
-            if file_type:
-                prefix = f"{file_type}/{user_id}/"
-            else:
-                prefix = f"{user_id}/"
+            prefix = f"{file_type}/{user_id}/" if file_type else f"{user_id}/"
             response = self.s3_client.list_objects_v2(
                 Bucket=self.bucket_name,
                 Prefix=prefix
@@ -79,11 +75,11 @@ class UserS3Service:
                 })
             return files
         except Exception as e:
-            raise Exception(f"파일 목록 조회 실패: {str(e)}")
+            raise Exception(f"Failed to list user files: {str(e)}")
     
     def get_presigned_url(self, s3_key: str, expires_in: int = 3600) -> str:
         """
-        사전 서명된 URL 생성
+        Generate presigned URL for download
         """
         try:
             return self.s3_client.generate_presigned_url(
@@ -92,11 +88,11 @@ class UserS3Service:
                 ExpiresIn=expires_in
             )
         except Exception as e:
-            raise Exception(f"URL 생성 실패: {str(e)}")
+            raise Exception(f"Failed to generate presigned URL: {str(e)}")
     
     def upload_text_content(self, s3_key: str, content: str) -> str:
         """
-        텍스트 내용을 S3에 업로드
+        Upload plain text content to S3
         """
         try:
             self.s3_client.put_object(
@@ -110,11 +106,11 @@ class UserS3Service:
             )
             return s3_key
         except Exception as e:
-            raise Exception(f"텍스트 업로드 실패: {str(e)}")
+            raise Exception(f"Failed to upload text content: {str(e)}")
     
     def get_file_content(self, s3_key: str) -> str:
         """
-        파일 내용 가져오기
+        Retrieve file content from S3
         """
         try:
             response = self.s3_client.get_object(
@@ -123,12 +119,12 @@ class UserS3Service:
             )
             return response['Body'].read().decode('utf-8')
         except Exception as e:
-            print(f"파일 내용 조회 실패: {str(e)}")
+            print(f"Failed to get file content: {str(e)}")
             return ""
     
     def delete_user_file(self, s3_key: str):
         """
-        사용자 파일 삭제
+        Delete a user file from S3
         """
         try:
             self.s3_client.delete_object(
@@ -136,6 +132,6 @@ class UserS3Service:
                 Key=s3_key
             )
         except Exception as e:
-            raise Exception(f"파일 삭제 실패: {str(e)}")
+            raise Exception(f"Failed to delete file: {str(e)}")
 
 user_s3_service = UserS3Service()
