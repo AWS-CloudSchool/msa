@@ -11,7 +11,7 @@ def root():
     return {"message": "Hello from auth_service!"}
 
 origins = [
-    "http://34.228.65.221:3000",
+    "http://44.244.212.37:3000",
     "*"
 ]
 

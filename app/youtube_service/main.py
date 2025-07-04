@@ -6,7 +6,7 @@ app = FastAPI()
 
 # ? CORS Çã¿ë
 origins = [
-    "http://34.228.65.221:3000",
+    "http://44.244.212.37:3000",
     "*"
 ]
 
@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(youtube_router, prefix="/youtube")
+app.include_router(youtube_router)
 
 @app.get("/")
 def root():
