@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(youtube_router, prefix="/youtube")
+app.include_router(youtube_router, prefix="/search")
 
 @app.get("/")
 def root():
