@@ -35,4 +35,4 @@ def root():
 
 print("FastAPI route list:")
 for route in app.routes:
-    print(f"{route.path} ¡æ {route.methods}")
+    print(f"{route.path} -> {route.methods}")
