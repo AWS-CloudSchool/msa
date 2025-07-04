@@ -9,7 +9,7 @@ from s3.routers.s3 import router as s3_router
 app = FastAPI()
 
 origins = [
-    "http://34.228.65.221:3000",
+    "http://34.222.140.202:3000",
 ]
 
 app.add_middleware(
