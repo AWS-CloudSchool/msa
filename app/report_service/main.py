@@ -32,3 +32,7 @@ app.include_router(analysis_router, prefix="/analyze")
 @app.get("/")
 def root():
     return {"message": "Hello from analyzer_service!"}
+
+print("? FastAPI 라우트 목록:")
+for route in app.routes:
+    print(f"{route.path} → {route.methods}")
