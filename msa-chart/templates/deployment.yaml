@@ -3,6 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .name }}
+  labels:
+    app: {{ .name }}
 spec:
   replicas: 1
   selector:
@@ -16,8 +18,27 @@ spec:
       containers:
         - name: {{ .name }}
           image: {{ .image }}
-          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
           ports:
             - containerPort: {{ .port }}
+          command: ["uvicorn"]
+          args:
+            - "main:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port={{ .port }}"
+
+          env:
+            {{- if eq .name "auth-service" }}
+            - name: COGNITO_CLIENT_ID
+              value: "{{ .cognitoClientId }}"
+            - name: COGNITO_CLIENT_SECRET
+              value: "{{ .cognitoClientSecret }}"
+            - name: AWS_REGION
+              value: "{{ .awsRegion }}"
+            {{- end }}
+            {{- if .env }}
+            {{- toYaml .env | nindent 10 }}
+            {{- end }}
+
 ---
 {{- end }}

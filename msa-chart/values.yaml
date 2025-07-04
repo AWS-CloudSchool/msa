@@ -3,22 +3,29 @@ global:
 
 services:
   - name: auth-service
-    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/auth_service:latest
+    image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/auth_service:latest
     port: 8000
-    path: /auth
+    pathPrefix: /auth
+    ingressHost: auth.example.com
+    cognitoClientId: 6rqobnfsf0lnfen24me10j7d2v
+    cognitoClientSecret: 1gjtqd8hu2kibsg4pu47gvu7qpatjacaer3ajp5lm0pj5e30o89q
+    awsRegion: us-west-2
 
   - name: report-service
-    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/report_service:latest
+    image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/report_service:latest
     port: 8000
     path: /report
+    env:
+      - name: DATABASE_URL
+        value: postgresql://user:password@44.244.212.37:5432/backend_final
 
   - name: chatbot-service
-    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/chatbot_service:latest
+    image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/chatbot_service:latest
     port: 8000
     path: /chatbot
 
   - name: youtube-service
-    image: 922805825674.dkr.ecr.us-east-1.amazonaws.com/youtube_service:latest
+    image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/youtube_service:latest
     port: 8000
     path: /youtube
 

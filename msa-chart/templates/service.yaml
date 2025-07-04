@@ -3,11 +3,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .name }}
+  labels:
+    app: {{ .name }}
 spec:
   selector:
     app: {{ .name }}
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 80
       targetPort: {{ .port }}
+  type: ClusterIP
 ---
 {{- end }}
