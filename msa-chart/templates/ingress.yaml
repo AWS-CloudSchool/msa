@@ -22,6 +22,13 @@ spec:
                 name: report-service
                 port:
                   number: 80
+          - path: /analyze
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: report-service
+                port:
+                  number: 80
           - path: /youtube
             pathType: ImplementationSpecific
             backend:
