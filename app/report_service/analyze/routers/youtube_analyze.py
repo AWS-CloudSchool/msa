@@ -12,8 +12,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/analyze", tags=["YouTube Reporter"])
-
+#router = APIRouter(prefix="/analyze", tags=["YouTube Reporter"])
+router = APIRouter(tags=["YouTube Reporter"])
 
 async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str, db: Session):
     try:
