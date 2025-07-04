@@ -36,5 +36,9 @@ spec:
             - name: AWS_REGION
               value: "{{ .awsRegion }}"
             {{- end }}
+            {{- if .env }}
+            {{- toYaml .env | nindent 10 }}
+            {{- end }}
+
 ---
 {{- end }}
