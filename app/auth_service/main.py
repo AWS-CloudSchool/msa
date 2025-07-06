@@ -10,7 +10,8 @@ def root():
     return {"message": "Hello from auth_service!"}
 
 origins = [
-    "https://www.tissue.cloud"
+    "https://www.tissue.cloud",
+    "https://dltec80i79zlu.cloudfront.net"
 ]
 
 app.add_middleware(
