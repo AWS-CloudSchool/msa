@@ -9,7 +9,7 @@ from s3.routers.s3 import router as s3_router
 app = FastAPI()
 
 origins = [
-        "https://dltec80i79zlu.cloudfront.net"
+        "https://www.tissue.cloud"
 ]
 
 app.add_middleware(

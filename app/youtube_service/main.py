@@ -6,7 +6,7 @@ app = FastAPI()
 
 # ? CORS Çã¿ë
 origins = [
-"https://dltec80i79zlu.cloudfront.net"
+"https://www.tissue.cloud"
 ]        ]
 
 app.add_middleware(
