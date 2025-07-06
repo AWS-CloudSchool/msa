@@ -33,4 +33,4 @@ services:
 ingress:
   enabled: true
   host: msa.example.com    
-  className: nginx
+  className: alb

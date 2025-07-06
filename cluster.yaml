@@ -1,0 +1,27 @@
+# eung-cluster-v2.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: eung-cluster
+  region: us-west-2
+
+vpc:
+  id: vpc-0d42e749b6fbb9504
+  subnets:
+    private:
+      us-west-2a:
+        id: subnet-0b0a8cb77a815e83f
+      us-west-2b:
+        id: subnet-05ebbbca7b2a1e2a7
+  nat:
+    gateway: Single
+
+nodeGroups:
+  - name: eung-ng
+    instanceType: t2.medium
+    desiredCapacity: 2
+    privateNetworking: true
+    ssh:
+      allow: false
+

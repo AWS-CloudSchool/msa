@@ -6,9 +6,8 @@ app = FastAPI()
 
 # ? CORS Çã¿ë
 origins = [
-    "http://34.222.140.202:3000",
-    "*"
-]
+"https://dltec80i79zlu.cloudfront.net"
+]        ]
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,0 +1,250 @@
+---
+# Source: msa-services/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+# Source: msa-services/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: report-service
+  labels:
+    app: report-service
+spec:
+  selector:
+    app: report-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+# Source: msa-services/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-service
+  labels:
+    app: chatbot-service
+spec:
+  selector:
+    app: chatbot-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+# Source: msa-services/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: youtube-service
+  labels:
+    app: youtube-service
+spec:
+  selector:
+    app: youtube-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+# Source: msa-services/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/auth_service:latest
+          ports:
+            - containerPort: 8000
+          command: ["uvicorn"]
+          args:
+            - "main:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port=8000"
+
+          env:
+            - name: COGNITO_CLIENT_ID
+              value: "6rqobnfsf0lnfen24me10j7d2v"
+            - name: COGNITO_CLIENT_SECRET
+              value: "1gjtqd8hu2kibsg4pu47gvu7qpatjacaer3ajp5lm0pj5e30o89q"
+            - name: AWS_REGION
+              value: "us-west-2"
+---
+# Source: msa-services/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report-service
+  labels:
+    app: report-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: report-service
+  template:
+    metadata:
+      labels:
+        app: report-service
+    spec:
+      containers:
+        - name: report-service
+          image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/report_service:latest
+          ports:
+            - containerPort: 8000
+          command: ["uvicorn"]
+          args:
+            - "main:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port=8000"
+
+          env:
+          - name: DATABASE_URL
+            value: postgresql+psycopg2://user:password@database-1.cy5qyee4ofa9.us-east-1.rds.amazonaws.com:5432/backend_final
+---
+# Source: msa-services/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-service
+  labels:
+    app: chatbot-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot-service
+  template:
+    metadata:
+      labels:
+        app: chatbot-service
+    spec:
+      containers:
+        - name: chatbot-service
+          image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/chatbot_service:latest
+          ports:
+            - containerPort: 8000
+          command: ["uvicorn"]
+          args:
+            - "main:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port=8000"
+
+          env:
+---
+# Source: msa-services/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: youtube-service
+  labels:
+    app: youtube-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: youtube-service
+  template:
+    metadata:
+      labels:
+        app: youtube-service
+    spec:
+      containers:
+        - name: youtube-service
+          image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/youtube_service:latest
+          ports:
+            - containerPort: 8000
+          command: ["uvicorn"]
+          args:
+            - "main:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port=8000"
+
+          env:
+---
+# Source: msa-services/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: msa-ingress
+  namespace: test
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /auth
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+          - path: /report
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: report-service
+                port:
+                  number: 80
+          - path: /analyze
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: report-service
+                port:
+                  number: 80
+          - path: /youtube
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: youtube-service
+                port:
+                  number: 80
+          - path: /search
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: youtube-service
+                port:
+                  number: 80
+          - path: /chatbot
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: chatbot-service
+                port:
+                  number: 80
