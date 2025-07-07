@@ -72,3 +72,6 @@ def verify_token_internal(authorization: Optional[str] = Header(None)):
         "user_id": result.get("username", ""),
         "email": result.get("email", ""),
     }
+@router.options("/login")
+def options_login():
+    return Response(status_code=204)

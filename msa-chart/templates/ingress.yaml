@@ -10,10 +10,12 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/load-balancer-name: msa-alb
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:922805825674:certificate/9c33cb1d-573d-4aee-ae17-b0951b9291fd
 spec:
   ingressClassName: alb
   rules:
-    - http:
+    - host: www.tissue.cloud
+      http:
         paths:
           - path: /auth
             pathType: ImplementationSpecific
