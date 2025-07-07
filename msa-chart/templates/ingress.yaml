@@ -25,14 +25,14 @@ spec:
                 port:
                   number: 80
           - path: /report
-            pathType: ImplementationSpecific
+            pathType: Prefix
             backend:
               service:
                 name: report-service
                 port:
                   number: 80
           - path: /analyze
-            pathType: ImplementationSpecific
+            pathType: Prefix
             backend:
               service:
                 name: report-service
