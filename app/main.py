@@ -30,3 +30,7 @@ app.include_router(chatbot_router)
 @app.get("/")
 def root():
     return {"message": "Backend API is running!"}
+
+for r in app.routes:
+    print("ROUTE:", r.path, r.methods)
+
